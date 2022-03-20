@@ -6,7 +6,21 @@ from matplotlib.colors import Normalize
 from matplotlib.gridspec import GridSpec
 from lib.pinn import PINN
 from lib.network import Network
-from lib.optimizer import L_BFGS_B
+from lib.optimizer import Optimizer
+import argparse
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--maxiter', type=int, default=1000)
+    parser.add_argument('-ntr', '--num-train-samples', type=int, default=1000)
+    parser.add_argument('-nte', '--num-test-samples', type=int, default=1000)
+    parser.add_argument('-n', '--network', type=str, default='pinn')
+    parser.add_argument('-l', '--loss', type=str, default='l2')
+    parser.add_argument('-gi', '--gradient-interval', type=int, default=100)
+    parser.add_argument('--gt-path', type=str, default='data/pinn.pkl')
+    return parser.parse_known_args()[0]
+
 
 def uv(network, xy):
     """
@@ -58,6 +72,7 @@ if __name__ == '__main__':
     for the cavity flow governed by the steady Navier-Stokes equation.
     """
 
+    args = parse_args()
     # number of training samples
     num_train_samples = 10000
     # number of test samples
@@ -74,7 +89,7 @@ if __name__ == '__main__':
     network = Network().build()
     network.summary()
     # build a PINN model
-    pinn = PINN(network, rho=rho, nu=nu).build()
+    model = PINN(network, rho=rho, nu=nu).build()
 
     # create training input
     xy_eqn = np.random.rand(num_train_samples, 2)
@@ -92,8 +107,8 @@ if __name__ == '__main__':
     y_train = [zeros, zeros, uv_bnd]
 
     # train the model using L-BFGS-B algorithm
-    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train)
-    lbfgs.fit()
+    optimizer = Optimizer(model=model, x_train=x_train, y_train=y_train, dict_params=args.__dict__)
+    optimizer.fit()
 
     # create meshgrid coordinates (x, y) for test plots
     x = np.linspace(0, 1, num_test_samples)
@@ -115,4 +130,6 @@ if __name__ == '__main__':
     contour(gs[1, 0], x, y, u, 'u')
     contour(gs[1, 1], x, y, v, 'v')
     plt.tight_layout()
+    plt.savefig(os.path.join('figures', list(args.__dict__.values())[:-1].__str__() + str(time.time()) + '.png'))
     plt.show()
+    plt.close()
