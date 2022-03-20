@@ -40,27 +40,24 @@ class Optimizer:
             self.__setattr__(key, dict_params[key])
 
     def regenerate_data(self, grads_x):
-        tx_eqn, tx_ini, tx_bnd = self.x_train
-        self.x_train[0] = tf.Variable(tf.concat((tx_eqn,
-                                                 tf.add(tx_eqn, grads_x[0] * 0.01)), axis=0))
-        num_train_samples = tx_ini.shape[0]
-        new_tx_ini = 2 * np.random.rand(num_train_samples, 2) - 1  # x_ini = -1 ~ +1
-        new_tx_ini[..., 0] = 0  # t_ini =  0
-        self.x_train[1] = tf.Variable(tf.concat((tx_ini, tf.constant(new_tx_ini, dtype=tf.float32)), axis=0))
+        xy_eqn, xy_bnd = self.x_train
+        num_train_samples = xy_eqn.shape[0]
+        self.x_train[0] = tf.Variable(tf.concat((xy_eqn,
+                                                 tf.add(xy_eqn, grads_x[0] * 0.01)), axis=0))
+        new_xy_ub = np.random.rand(num_train_samples // 2, 2)  # top-bottom boundaries
+        new_xy_ub[..., 1] = np.round(new_xy_ub[..., 1])  # y-position is 0 or 1
+        new_xy_lr = np.random.rand(num_train_samples // 2, 2)  # left-right boundaries
+        new_xy_lr[..., 0] = np.round(new_xy_lr[..., 0])  # x-position is 0 or 1
+        new_xy_bnd = np.random.permutation(np.concatenate([new_xy_ub, new_xy_lr]))
+        self.x_train[1] = tf.Variable(tf.concat((xy_bnd, tf.constant(new_xy_bnd, dtype=tf.float32)), axis=0))
 
-        new_tx_bnd = np.random.rand(num_train_samples, 2)  # t_bnd =  0 ~ +1
-        new_tx_bnd[..., 1] = 2 * np.round(new_tx_bnd[..., 1]) - 1  # x_bnd = -1 or +1
-        self.x_train[2] = tf.Variable(tf.concat((tx_bnd, tf.constant(new_tx_bnd, dtype=tf.float32)), axis=0))
-
-        tx_ini = self.x_train[1].numpy()
-        num_train_samples = tx_ini.shape[0]
-        u_eqn = np.zeros((num_train_samples, 1))  # u_eqn = 0
-        if self.network == 'pinn':
-            u_ini = np.sin(-np.pi * tx_ini[..., 1, np.newaxis])  # u_ini = -sin(pi*x_ini)
-        else:
-            u_ini = -np.pi * np.cos(-np.pi * tx_ini[..., 1, np.newaxis])  # u_ini = -sin(pi*x_ini)
-        u_bnd = np.zeros((num_train_samples, 1))  # u_bnd = 0
-        y_train = [u_eqn, u_ini, u_bnd]
+        num_train_samples *= 2
+        u0 = 1
+        # create training output
+        zeros = np.zeros((num_train_samples, 2))
+        uv_bnd = np.zeros((num_train_samples, 2))
+        uv_bnd[..., 0] = u0 * np.floor(self.x_train[1].numpy()[..., 1])
+        y_train = [zeros, zeros, uv_bnd]
         self.y_train = [tf.constant(y, dtype=tf.float32) for y in y_train]
 
     @tf.function
