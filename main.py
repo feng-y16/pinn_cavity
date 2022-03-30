@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.gridspec import GridSpec
 import os
+import pickle
 import argparse
 from lib.pinn import PINN
 from lib.network import Network
@@ -78,9 +79,9 @@ if __name__ == '__main__':
 
     args = parse_args()
     # number of training samples
-    num_train_samples = 10000
+    num_train_samples = args.num_train_samples
     # number of test samples
-    num_test_samples = 100
+    num_test_samples = args.num_test_samples
 
     # inlet flow velocity
     u0 = 1
@@ -126,14 +127,43 @@ if __name__ == '__main__':
     u, v = uv(network, xy)
     u = u.reshape(x.shape)
     v = v.reshape(x.shape)
-    # plot test results
-    fig = plt.figure(figsize=(6, 5))
-    gs = GridSpec(2, 2)
-    contour(gs[0, 0], x, y, psi, 'psi')
-    contour(gs[0, 1], x, y, p, 'p')
-    contour(gs[1, 0], x, y, u, 'u')
-    contour(gs[1, 1], x, y, v, 'v')
-    plt.tight_layout()
-    plt.savefig(os.path.join('figures', list(args.__dict__.values())[:-1].__str__() + str(time.time()) + '.png'))
-    plt.show()
-    plt.close()
+    if os.path.isfile(args.gt_path):
+        with open(args.gt_path, 'rb') as f:
+            data = pickle.load(f)
+        x_gt, y_gt, psi_gt, p_gt, u_gt, v_gt = data
+        fig = plt.figure(figsize=(6, 5))
+        gs = GridSpec(2, 2)
+        contour(gs[0, 0], x, y, np.abs(psi - psi_gt), 'dpsi')
+        contour(gs[0, 1], x, y, np.abs(p - p_gt), 'dp')
+        contour(gs[1, 0], x, y, np.abs(u - u_gt), 'du')
+        contour(gs[1, 1], x, y, np.abs(v - v_gt), 'dv')
+        plt.tight_layout()
+        plt.savefig(os.path.join('figures', list(args.__dict__.values())[:-1].__str__() + str(time.time()) +
+                                 '_error.png'))
+        plt.show()
+        plt.close()
+
+        gs = GridSpec(2, 2)
+        contour(gs[0, 0], x, y, psi, 'psi')
+        contour(gs[0, 1], x, y, p, 'p')
+        contour(gs[1, 0], x, y, u, 'u')
+        contour(gs[1, 1], x, y, v, 'v')
+        plt.tight_layout()
+        plt.savefig(os.path.join('figures', list(args.__dict__.values())[:-1].__str__() + str(time.time()) + '.png'))
+        plt.show()
+        plt.close()
+    else:
+        # plot test results
+        fig = plt.figure(figsize=(6, 5))
+        gs = GridSpec(2, 2)
+        contour(gs[0, 0], x, y, psi, 'psi')
+        contour(gs[0, 1], x, y, p, 'p')
+        contour(gs[1, 0], x, y, u, 'u')
+        contour(gs[1, 1], x, y, v, 'v')
+        data = [x, y, psi, p, u, v]
+        with open(args.gt_path, 'wb') as f:
+            pickle.dump(data, f)
+        plt.tight_layout()
+        plt.savefig(os.path.join('figures', list(args.__dict__.values())[:-1].__str__() + str(time.time()) + '.png'))
+        plt.show()
+        plt.close()
