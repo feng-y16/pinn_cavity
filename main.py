@@ -16,9 +16,9 @@ from lib.optimizer import Optimizer
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--maxiter', type=int, default=1000)
-    parser.add_argument('-ntr', '--num-train-samples', type=int, default=1000)
-    parser.add_argument('-nte', '--num-test-samples', type=int, default=1000)
+    parser.add_argument('-i', '--maxiter', type=int, default=2000)
+    parser.add_argument('-ntr', '--num-train-samples', type=int, default=10000)
+    parser.add_argument('-nte', '--num-test-samples', type=int, default=100)
     parser.add_argument('-n', '--network', type=str, default='pinn')
     parser.add_argument('-l', '--loss', type=str, default='l2')
     parser.add_argument('-gi', '--gradient-interval', type=int, default=100)
