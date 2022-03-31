@@ -4,6 +4,7 @@ import lib.tf_silent
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm 
 from matplotlib.colors import Normalize
 from matplotlib.gridspec import GridSpec
 import os
@@ -63,36 +64,40 @@ def contour(grid, x, y, z, title, levels=50):
     vmin = -2e-1
     vmax = 2e-1
     if (title == 'psi'):
-        vmax = 1e-1
+        vmax = 1.2e-1
         vmin = -1e-1
     if (title == 'p'):
-        vmax = 6e-1
+        vmax = 6.1e-1
         vmin = -5e-1
     if (title == 'u'):
-        vmax = 1e+0
-        vmin = -1e-1
+        vmax = 1.1e+0
+        vmin = -2e-1
     if (title == 'v'):
-        vmax = 2e-1
+        vmax = 2.1e-1
         vmin = -2e-1
     if (title == 'dpsi'):
-        vmax = 1e-2
+        vmax = 1.1e-2
         vmin = 0.0
     if (title == 'dp'):
-        vmax = 4e-1
+        vmax = 4.1e-1
         vmin = 0.0
     if (title == 'du'):
-        vmax = 1e-1
+        vmax = 1.1e-1
         vmin = 0.0
     if (title == 'dv'):
-        vmax = 8e-2
+        vmax = 8.1e-2
         vmin = 0.0
     
     # plot a contour
     plt.subplot(grid)
-    plt.contour(x, y, z, colors='k', linewidths=0.2, levels=levels, norm=Normalize(vmin=vmin, vmax=vmax))
-    plt.contourf(x, y, z, cmap='rainbow', levels=levels, norm=Normalize(vmin=vmin, vmax=vmax))
+    print(title, vmin, vmax)
+    plt.contour(x, y, z, colors='k', linewidths=0.2, levels=levels, vmin=vmin, vmax=vmax)
+    plt.contourf(x, y, z, cmap='rainbow', levels=levels, vmin=vmin, vmax=vmax)
     plt.title(title)
-    cbar = plt.colorbar(pad=0.03, aspect=25, format='%.0e')
+    m = plt.cm.ScalarMappable(cmap='rainbow', norm=Normalize(vmin=vmin, vmax=vmax)) 
+    m.set_array(z) 
+    m.set_clim(vmin, vmax) 
+    cbar = plt.colorbar(m, pad=0.03, aspect=25, format='%.0e')
     cbar.mappable.set_clim(vmin, vmax)
 
 
