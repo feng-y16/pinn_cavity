@@ -60,11 +60,36 @@ def contour(grid, x, y, z, title, levels=50):
     """
 
     # get the value range
-    vmin = np.min(z)
-    vmax = np.max(z)
+    vmin = -2e-1
+    vmax = 2e-1
+    if (title == 'psi'):
+        vmax = 1e-1
+        vmin = -1e-1
+    if (title == 'p'):
+        vmax = 6e-1
+        vmin = -5e-1
+    if (title == 'u'):
+        vmax = 1e+0
+        vmin = -1e-1
+    if (title == 'v'):
+        vmax = 2e-1
+        vmin = -2e-1
+    if (title == 'dpsi'):
+        vmax = 1e-2
+        vmin = 0.0
+    if (title == 'dp'):
+        vmax = 4e-1
+        vmin = 0.0
+    if (title == 'du'):
+        vmax = 1e-1
+        vmin = 0.0
+    if (title == 'dv'):
+        vmax = 8e-2
+        vmin = 0.0
+    
     # plot a contour
     plt.subplot(grid)
-    plt.contour(x, y, z, colors='k', linewidths=0.2, levels=levels)
+    plt.contour(x, y, z, colors='k', linewidths=0.2, levels=levels, norm=Normalize(vmin=vmin, vmax=vmax))
     plt.contourf(x, y, z, cmap='rainbow', levels=levels, norm=Normalize(vmin=vmin, vmax=vmax))
     plt.title(title)
     cbar = plt.colorbar(pad=0.03, aspect=25, format='%.0e')
@@ -143,6 +168,7 @@ if __name__ == '__main__':
         plt.show()
         plt.close()
 
+        fig = plt.figure(figsize=(6, 5))
         gs = GridSpec(2, 2)
         contour(gs[0, 0], x, y, psi, 'psi')
         contour(gs[0, 1], x, y, p, 'p')
